@@ -1,4 +1,6 @@
 import { GetStaticProps } from "next"
+import { useContext } from "react"
+import { PlayerContext } from "../contexts/PlayerContext"
 import { format, parseISO } from "date-fns"
 import { api } from "../services/api"
 import { ConvertDurationToTimeString } from "../utils/convertDurationToTimeString"
@@ -14,7 +16,8 @@ type Episode = {
   thumbnail: string;
   members: string;
   published_at: string;
-  duration: string;
+  duration: number;
+  duration_as_string: string;
   url: string;
 }
 
@@ -24,6 +27,8 @@ type HomeProps = {
 }
 
 export default function Home({ latest_episodes, all_episodes }: HomeProps) {
+  const { play } = useContext(PlayerContext)
+
   return (
     <div className={styles.homepage}>
       <section className={styles.latestEpisodes}>
@@ -47,10 +52,10 @@ export default function Home({ latest_episodes, all_episodes }: HomeProps) {
                   </Link>
                   <p>{episode.members}</p>
                   <span>{episode.published_at}</span>
-                  <span>{episode.duration}</span>
+                  <span>{episode.duration_as_string}</span>
                 </div>
 
-                <button type='button'>
+                <button type='button' onClick={() => play(episode)}>
                   <img src="/play-green.svg" alt="Tocar episódio" />
                 </button>
               </li>
@@ -94,7 +99,7 @@ export default function Home({ latest_episodes, all_episodes }: HomeProps) {
                       </td>
                       <td>{episode.members}</td>
                       <td style={{ width: 100 }}>{episode.published_at}</td>
-                      <td>{episode.duration}</td>
+                      <td>{episode.duration_as_string}</td>
                       <td>
                         <button type='button'>
                           <img src="/play-green.svg" alt="Tocar episódio" />
@@ -132,7 +137,8 @@ export const getStaticProps: GetStaticProps = async () => {
         'd MMM yy',
         { locale: ptBR },
       ),
-      duration: ConvertDurationToTimeString(Number(episode.file.duration)),
+      duration: Number(episode.file.duration),
+      duration_as_string: ConvertDurationToTimeString(Number(episode.file.duration)),
       url: episode.file.url,
     }
   })
