@@ -2,9 +2,11 @@ import { parseISO, format} from 'date-fns';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { api } from '../../services/api';
 import { ConvertDurationToTimeString } from '../../utils/convertDurationToTimeString';
+import { usePlayer } from '../../contexts/PlayerContext';
 import ptBR from 'date-fns/locale/pt-BR'
 import Image from 'next/image'
 import Link from 'next/link'
+import Head from 'next/head'
 
 import styles from './episode.module.scss'
 
@@ -14,7 +16,8 @@ type Episode = {
   thumbnail: string
   members: string
   published_at: string
-  duration: string
+  duration: number
+  duration_to_string: string
   description: string
   url: string
 }
@@ -24,8 +27,14 @@ type EpisodeProps = {
 }
 
 export default function Episode({ episode }: EpisodeProps) {
+  const { play } = usePlayer()
+
   return (
     <div className={styles.episode}>
+      <Head>
+        <title>{episode.title} | Podcastr</title>
+      </Head>
+
       <div className={styles.thumbnailContainer}>
         <Link href='/'>
           <button type='button'>
@@ -38,7 +47,7 @@ export default function Episode({ episode }: EpisodeProps) {
           src={episode.thumbnail}
           objectFit='cover'
         />
-        <button type='button'>
+        <button type='button' onClick={() => play(episode)}>
           <img src="/play.svg" alt="Tocar episódio"/>
         </button>
       </div>
@@ -47,7 +56,7 @@ export default function Episode({ episode }: EpisodeProps) {
         <h1>{episode.title}</h1>
         <span>{episode.members}</span>
         <span>{episode.published_at}</span>
-        <span>{episode.duration}</span>
+        <span>{episode.duration_to_string}</span>
       </header>
 
       <div 
@@ -80,7 +89,8 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
       'd MMM yy',
       { locale: ptBR },
     ),
-    duration: ConvertDurationToTimeString(Number(data.file.duration)),
+    duration: Number(data.file.duration),
+    duration_to_string: ConvertDurationToTimeString(Number(data.file.duration)),
     description: data.description,
     url: data.file.url,
   }
